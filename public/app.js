@@ -267,7 +267,7 @@ function renderizarGrillaCalendario() {
                 tr.innerHTML += `
                     <td class="border p-2 align-top bg-blue-100 border-blue-200 shadow-inner">
                         <div class="text-[11px] leading-tight flex flex-col h-full justify-between">
-                            <div><span class="font-bold text-blue-900 block mb-1">${reserva.asignatura}</span><span class="text-gray-700 block">${reserva.docente}</span></div>
+                            <div><span class="font-bold text-blue-900 block mb-1">${reserva.asignatura}</span><span class="text-gray-700 block">${reserva.docente}</span><span class="text-xs text-gray-500">${reserva.fecha_inicio} al ${reserva.fecha_fin}</span></div>
                             <div class="mt-2 pt-1 border-t border-blue-200"><span class="text-blue-600 block text-[9px] uppercase font-bold">${reserva.nombre_unidad}</span>${btnDelete}</div>
                         </div>
                     </td>
