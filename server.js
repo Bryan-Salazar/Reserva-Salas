@@ -4,7 +4,7 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // ✅ CAMBIO CRÍTICO: Puerto dinámico
 
 // Middlewares: Para poder recibir JSON y conectar con el frontend
 app.use(cors());
@@ -14,7 +14,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Conexión a la base de datos
 const dbPath = path.resolve(__dirname, 'database.sqlite');
-const db = new sqlite3.Database(dbPath);
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error('❌ Error al conectar a la base de datos:', err.message);
+    } else {
+        console.log('✅ Base de datos conectada correctamente');
+    }
+});
 
 // ==========================================
 // RUTAS DE LA API (ENDPOINTS)
@@ -177,6 +183,12 @@ app.put('/api/salas/:id', (req, res) => {
         res.json({ mensaje: 'Sala actualizada correctamente' });
     });
 });
+
+// ✅ NUEVA RUTA: Health check para verificar que el servidor esté funcionando
+app.get('/health', (req, res) => {
+    res.json({ status: 'OK', message: 'Servidor funcionando correctamente' });
+});
+
 // Iniciar el servidor
 app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
