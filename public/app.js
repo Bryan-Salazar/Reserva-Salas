@@ -193,13 +193,13 @@ async function cargarAsignaciones() {
 btnVista.addEventListener('click', () => {
     if(vistaActual === 'lista') {
         vistaActual = 'calendario';
-        btnVista.textContent = '📄 Ver Lista';
+        btnVista.textContent = 'Ver Lista';
         contenedorLista.classList.add('hidden');
         contenedorCalendario.classList.remove('hidden');
         if(filtroSala.value === "TODAS") filtroSala.selectedIndex = 1; 
     } else {
         vistaActual = 'lista';
-        btnVista.textContent = '📅 Ver Calendario';
+        btnVista.textContent = 'Ver Calendario';
         contenedorLista.classList.remove('hidden');
         contenedorCalendario.classList.add('hidden');
     }
