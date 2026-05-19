@@ -156,7 +156,7 @@ async function cargarSalas() {
         // Formulario
         const optionForm = document.createElement('option');
         optionForm.value = sala.id;
-        optionForm.textContent = `${sala.nombre} (Cap: ${sala.capacidad})`;
+        optionForm.textContent = `${sala.nombre} (Cap: ${sala.capacidad})(com: ${sala.computadores})${sala.detalles})`;
         salaSelect.appendChild(optionForm);
 
         // Filtro
