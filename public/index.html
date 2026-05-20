@@ -343,15 +343,13 @@
     <!-- MODAL CRONOGRAMA PÚBLICO -->
     <div class="modal fade" id="modal-cronograma-publico" tabindex="-1" aria-hidden="true">
         <div class="text-center modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content text-center border-0 shadow">
+            <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-intep text-white">
-                    <div>
-                        <h5 class="modal-title fw-bold mb-0">Cronograma de Salas</h5>
-                        <small class="opacity-75">Consulta pública</small>
-                    </div>
-                    <div class="d-flex align-items-center gap-3 ms-auto me-3">
+                    <div class="d-flex align-items-center gap-2">
                         <label class="small fw-semibold text-white mb-0">Día:</label>
-                        <select id="filtro-dia-publico" class="form-select form-select-sm fw-bold" style="width: auto;">
+                        <select id="filtro-dia-publico"
+                            class="form-select form-select-sm fw-bold"
+                            style="width: auto;">
                             <option value="LUNES">Lunes</option>
                             <option value="MARTES">Martes</option>
                             <option value="MIÉRCOLES">Miércoles</option>
@@ -361,7 +359,13 @@
                             <option value="DOMINGO">Domingo</option>
                         </select>
                     </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="text-center flex-grow-1">
+                        <h5 class="modal-title fw-bold mb-0">CRONOGRAMA DE SALAS</h5>
+                        <small class="opacity-75">Consulta pública</small>
+                    </div>
+                    <div>
+                        <button type="button"class="btn-close btn-close-white"data-bs-dismiss="modal"aria-label="Close"></button>
+                    </div>
                 </div>
                 <div class="modal-body p-0">
                     <div class="table-responsive">
