@@ -175,8 +175,8 @@ async function cargarSalas() {
                         <p class="text-[11px] text-gray-500 italic mt-1">${sala.detalles || 'Sin detalles configurados'}</p>
                     </div>
                     <button onclick="abrirEditarSala(${sala.id}, '${sala.nombre}', ${sala.capacidad}, ${sala.computadores}, '${sala.detalles || ''}')" 
-                            class="bg-purple-100 text-purple-700 hover:bg-purple-600 hover:text-white px-3 py-1.5 rounded text-xs font-bold transition-colors">
-                        ✏️ Editar
+                            class="bg-blue-100 text-white hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded text-xs font-bold transition-colors">
+                         Editar
                     </button>
                 </div>
             `;
