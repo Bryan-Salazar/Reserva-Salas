@@ -4,167 +4,334 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Salas de Sistemas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --intep-azul-claro: #0099db;
+            --intep-azul: #005C9E;
+            --intep-amarillo: #F8C300;
+        }
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6, .navbar-brand, .card-title {
+            font-family: 'Montserrat', 'Arial Black', sans-serif;
+        }
+        .bg-intep { 
+            background-color: var(--intep-azul) !important; 
+        }
+        .text-intep { 
+            color: var(--intep-azul-claro) !important; 
+        }
+        .btn-intep { 
+            background-color: var(--intep-azul) !important; 
+            color: #ffffff !important; 
+            border: none;
+        }
+        .btn-intep:hover { 
+            background-color: #004a80 !important; /* Un azul ligeramente más oscuro para el hover */
+            color: #ffffff !important; 
+        }
+        .btn-intep-amarillo {
+            background-color: var(--intep-amarillo) !important;
+            color: var(--intep-azul) !important; /* Texto azul sobre fondo amarillo para buen contraste */
+            border: none;
+        }
+        .btn-intep-amarillo:hover {
+            background-color: #dfae00 !important;
+            color: var(--intep-azul) !important;
+        }
+        .table-intep, .table-intep th { 
+            background-color: var(--intep-azul) !important; 
+            color: #ffffff !important; 
+        }
+        .celda-reserva { 
+            min-width: 160px; 
+            height: 95px; 
+            transition: background-color 0.2s; 
+        }
+        .celda-reserva:hover { 
+            background-color: #f8f9fa; 
+        }
+    </style>
 </head>
-<body class="bg-gray-100 text-gray-800 relative">
+<body class="bg-light text-dark">
 
-    <div id="login-view" class="min-h-screen flex items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-md w-96">
-            <h2 class="text-2xl font-bold mb-6 text-center text-[#0099db]">Reserva de Salas</h2>
-            <div class="flex justify-center mb-6">
-                <img 
-                    src="https://i.postimg.cc/qM00rjxt/ESCUDO-INTEP-H.png" 
-                    alt="Logo Sistema"
-                    class="w-32 h-auto"
-                >
+    <div id="login-view" class="min-vh-100 d-flex align-items-center justify-content-center">
+        <div class="card shadow border-0 p-4" style="width: 24rem;">
+            <div class="card-body text-center">
+                <h2 class="card-title fw-bold mb-1 text-intep">Reserva de Salas</h2>
+                <div class="mb-4">
+                    <img src="https://i.postimg.cc/qM00rjxt/ESCUDO-INTEP-H.png" alt="Logo INTEP" class="img-fluid" style="max-height: 50px;">
+                </div>
+                <form id="login-form" class="text-start">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Usuario</label>
+                        <input type="text" id="username" class="form-control" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small">Contraseña</label>
+                        <input type="password" id="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-intep w-100 fw-bold py-2 shadow-sm">Ingresar</button>
+                    <p id="login-error" class="text-danger text-center mt-3 d-none small fw-bold"></p>
+                </form>
             </div>
-            <form id="login-form">
-                <div class="mb-4"><label class="block text-sm font-medium mb-1">Usuario</label><input type="text" id="username" class="w-full border p-2 rounded focus:ring-blue-500 focus:border-blue-500" required></div>
-                <div class="mb-6"><label class="block text-sm font-medium mb-1">Contraseña</label><input type="password" id="password" class="w-full border p-2 rounded focus:ring-blue-500 focus:border-blue-500" required></div>
-                <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 font-bold">Ingresar</button>
-                <p id="login-error" class="text-red-500 text-sm mt-3 hidden text-center"></p>
-            </form>
         </div>
     </div>
 
-    <div id="dashboard-view" class="hidden min-h-screen flex flex-col">
-        <nav class="bg-[#005c9e] text-white p-4 shadow-md flex justify-between items-center">
+    <div id="dashboard-view" class="d-none min-vh-100 d-flex flex-column">
+        <nav class="navbar navbar-dark bg-intep shadow-sm px-4 py-0 d-flex justify-content-between align-items-center">
+            <div class="mb-4">
+                    <img src="https://i.postimg.cc/4d7BCnYf/Logo-b.png" alt="Logo INTEP" class="img-fluid" style="max-height: 70px;">
+                </div>
             <div>
-                <h1 class="text-xl font-bold">Gestión de Salas</h1>
-                <p id="user-info" class="text-sm text-blue-200"></p>
+                <h1 class="navbar-brand mb-0 h4 fw-bold text-white text-center">GESTIÓN DE SALAS DE SISTEMAS</h1>
+                <div id="user-info" class="text-white small fw-medium text-center"></div>
             </div>
-            <div class="flex items-center space-x-3">
-                <button id="btn-modal-password" class="text-sm hover:text-blue-200 underline font-medium">Cambiar Contraseña</button>
-                <button id="btn-modal-salas"class="hidden bg-slate-600 hover:bg-slate-700 text-white px-3 py-1.5 rounded font-bold text-sm shadow-sm transition-colors">Gestionar Salas</button>
-                <button id="btn-modal-usuarios"class="hidden bg-slate-600 hover:bg-slate-700 text-white px-3 py-1.5 rounded font-bold text-sm shadow-sm transition-colors">Nuevo Usuario</button>                
-                <button id="btn-logout" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded font-bold text-sm shadow-sm transition-colors">Cerrar Sesión</button>
+            <div class="d-flex align-items-center gap-2">
+                <button id="btn-modal-password" class="btn btn-link text-white text-decoration-none btn-sm fw-medium me-2">Cambiar Contraseña</button>
+                
+                <button id="btn-modal-salas" class="btn btn-sm text-white fw-bold d-none shadow-sm" style="background-color: #6f42c1;">Gestionar Salas</button>
+                <button id="btn-modal-usuarios" class="btn btn-warning btn-sm fw-bold text-dark d-none shadow-sm">Nuevo Usuario</button>
+                
+                <button id="btn-logout" class="btn btn-danger btn-sm fw-bold ms-2 shadow-sm">Cerrar Sesión</button>
             </div>
         </nav>
 
-        <main class="flex-1 p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <div class="bg-white p-6 rounded-lg shadow-md md:col-span-1 h-fit">
-                <h3 class="text-lg font-bold mb-4 border-b pb-2">Nueva Reserva de Sala</h3>
-                <form id="reserva-form" class="space-y-3 text-sm">
-                    <div><label class="font-medium">Sala</label><select id="sala_id" class="w-full border p-2 rounded" required></select></div>
-                    <div><label class="font-medium">Docente</label><input type="text" id="docente" class="w-full border p-2 rounded" required></div>
-                    <div><label class="font-medium">Asignatura</label><input type="text" id="asignatura" class="w-full border p-2 rounded" required></div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div><label class="font-medium">Fecha Inicio</label><input type="date" id="fecha_inicio" class="w-full border p-2 rounded" required></div>
-                        <div><label class="font-medium">Fecha Fin</label><input type="date" id="fecha_fin" class="w-full border p-2 rounded" required></div>
+        <main class="container-fluid flex-grow-1 p-4">
+            <div class="row g-4">
+                
+                <div class="col-10 col-md-3 mx-auto">
+                    <div class="card shadow-sm p-4 border-0">
+                        <h3 class="h5 fw-bold mb-3 border-bottom pb-2 text-dark">Nueva Reserva de Sala</h3>
+                        <form id="reserva-form" class="small">
+                            <div class="mb-2">
+                                <label class="form-label fw-medium mb-1">Sala</label>
+                                <select id="sala_id" class="form-select form-select-sm" required></select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-medium mb-1">Docente</label>
+                                <input type="text" id="docente" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-medium mb-1">Asignatura</label>
+                                <input type="text" id="asignatura" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col">
+                                    <label class="form-label fw-medium mb-1">Fecha Inicio</label>
+                                    <input type="date" id="fecha_inicio" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col">
+                                    <label class="form-label fw-medium mb-1">Fecha Fin</label>
+                                    <input type="date" id="fecha_fin" class="form-control form-control-sm" required>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-medium mb-1">Día de la semana</label>
+                                <select id="dia_semana" class="form-select form-select-sm" required>
+                                    <option value="LUNES">Lunes</option>
+                                    <option value="MARTES">Martes</option>
+                                    <option value="MIÉRCOLES">Miércoles</option>
+                                    <option value="JUEVES">Jueves</option>
+                                    <option value="VIERNES">Viernes</option>
+                                    <option value="SÁBADO">Sábado</option>
+                                    <option value="DOMINGO">Domingo</option>
+                                </select>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col">
+                                    <label class="form-label fw-medium mb-1">Hora Inicio</label>
+                                    <input type="time" id="hora_inicio" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col">
+                                    <label class="form-label fw-medium mb-1">Hora Fin</label>
+                                    <input type="time" id="hora_fin" class="form-control form-control-sm" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm py-2">Solicitar Reserva</button>
+                        </form>
                     </div>
-                    <div>
-                        <label class="font-medium">Día de la semana</label>
-                        <select id="dia_semana" class="w-full border p-2 rounded" required>
-                            <option value="LUNES">Lunes</option><option value="MARTES">Martes</option><option value="MIERCOLES">Miércoles</option>
-                            <option value="JUEVES">Jueves</option><option value="VIERNES">Viernes</option><option value="SABADO">Sábado</option><option value="DOMINGO">Domingo</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div><label class="font-medium">Hora Inicio</label><input type="time" id="hora_inicio" class="w-full border p-2 rounded" required></div>
-                        <div><label class="font-medium">Hora Fin</label><input type="time" id="hora_fin" class="w-full border p-2 rounded" required></div>
-                    </div>
-                    <button type="submit" class="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700 font-bold mt-4 shadow-sm">Solicitar Reserva</button>
-                </form>
-            </div>
+                </div>
 
-            <div class="bg-white p-6 rounded-lg shadow-md md:col-span-2">
-                <div class="flex justify-between items-center mb-4 border-b pb-2">
-                    <h3 class="text-lg font-bold">Cronograma</h3>
-                    <div class="flex items-center space-x-3">
-                        <button id="btn-vista" type="button" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1.5 rounded font-bold transition-colors">Ver Calendario</button>
-                        <div class="flex items-center space-x-2">
-                            <label class="text-sm font-medium text-gray-600">Sala:</label>
-                            <select id="filtro-sala" class="border p-1.5 rounded text-sm focus:ring-blue-500 focus:border-blue-500 font-bold bg-blue-50">
-                                <option value="TODAS">Todas las salas</option>
-                            </select>
+                <div class="col-12 col-md-9">
+                    <div class="card shadow-sm p-4 border-0 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                            <h3 class="h5 fw-bold m-0 text-dark">Cronograma de Asignaciones</h3>
+                            <div class="d-flex align-items-center gap-3">
+                                <button id="btn-vista" type="button" class="btn btn-secondary btn-sm fw-bold shadow-sm">Ver Calendario</button>
+                                <div class="d-flex align-items-center gap-2">
+                                    <label class="small fw-semibold text-muted mb-0">Día:</label>
+                                    <select id="filtro-sala" class="form-select form-select-sm fw-bold bg-light" style="width: auto;">
+                                        <option value="LUNES">Lunes</option>
+                                        <option value="MARTES">Martes</option>
+                                        <option value="MIÉRCOLES">Miércoles</option>
+                                        <option value="JUEVES">Jueves</option>
+                                        <option value="VIERNES">Viernes</option>
+                                        <option value="SÁBADO">Sábado</option>
+                                        <option value="DOMINGO">Domingo</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
+
+                        <div id="contenedor-lista" class="table-responsive">
+                            <table class="table table-hover table-striped align-middle small">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sala</th>
+                                        <th>Día</th>
+                                        <th>Horario</th>
+                                        <th>Docente / Asignatura</th>
+                                        <th>Unidad Responsable</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-asignaciones"></tbody>
+                            </table>
+                        </div>
+
+                        <div id="contenedor-calendario" class="table-responsive d-none">
+                            <table class="table table-bordered align-middle text-center small mb-0">
+                                <thead>
+                                    <tr id="thead-salas-dinamicas" class="table-intep text-white">
+                                        </tr>
+                                </thead>
+                                <tbody id="tbody-calendario"></tbody>
+                            </table>
+                        </div>
+
                     </div>
                 </div>
-                <div id="contenedor-lista" class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-100">
-                            <tr><th class="p-2">Sala</th><th class="p-2">Día</th><th class="p-2">Horario</th><th class="p-2">Docente / Asignatura</th><th class="p-2">Unidad</th></tr>
-                        </thead>
-                        <tbody id="tabla-asignaciones" class="divide-y"></tbody>
-                    </table>
-                </div>
-                <div id="contenedor-calendario" class="hidden overflow-x-auto">
-                    <table class="w-full text-left text-sm border-collapse">
-                        <thead class="bg-blue-800 text-white">
-                            <tr>
-                                <th class="border p-2 text-center w-24">HORA</th><th class="border p-2 text-center w-32">LUNES</th><th class="border p-2 text-center w-32">MARTES</th>
-                                <th class="border p-2 text-center w-32">MIÉRCOLES</th><th class="border p-2 text-center w-32">JUEVES</th><th class="border p-2 text-center w-32">VIERNES</th>
-                                <th class="border p-2 text-center w-32">SÁBADO</th><th class="border p-2 text-center w-32">DOMINGO</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody-calendario"></tbody>
-                    </table>
-                </div>
+
             </div>
         </main>
     </div>
 
-    <div id="modal-password" class="modal-bg hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h3 class="text-lg font-bold mb-4">Cambiar Contraseña</h3>
-            <form id="form-password" class="space-y-3">
-                <div><label class="block text-sm font-medium">Contraseña Actual</label><input type="password" id="pass-actual" class="w-full border p-2 rounded" required></div>
-                <div><label class="block text-sm font-medium">Nueva Contraseña</label><input type="password" id="pass-nueva" class="w-full border p-2 rounded" required></div>
-                <div class="flex justify-end space-x-2 mt-4">
-                    <button type="button" class="btn-cerrar-modal px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 font-medium">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">Actualizar</button>
+    <div class="modal fade" id="modal-password" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold">Cambiar Contraseña</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="modal-usuarios" class="modal-bg hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h3 class="text-lg font-bold mb-4">Registrar Nueva Unidad</h3>
-            <form id="form-usuarios" class="space-y-3">
-                <div><label class="block text-sm font-medium">Nombre de la Unidad</label><input type="text" id="new-unidad" class="w-full border p-2 rounded" required></div>
-                <div><label class="block text-sm font-medium">Usuario (Login)</label><input type="text" id="new-username" class="w-full border p-2 rounded" required></div>
-                <div><label class="block text-sm font-medium">Contraseña Inicial</label><input type="password" id="new-password" class="w-full border p-2 rounded" required></div>
-                <div><label class="block text-sm font-medium">Rol</label><select id="new-rol" class="w-full border p-2 rounded" required><option value="UNIDAD">Unidad Académica</option><option value="ADMIN">Administrador</option></select></div>
-                <div class="flex justify-end space-x-2 mt-4">
-                    <button type="button" class="btn-cerrar-modal px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 font-medium">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-yellow-500 text-blue-900 rounded hover:bg-yellow-600 font-bold">Crear Usuario</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="modal-lista-salas" class="modal-bg hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-[500px] max-h-[80vh] flex flex-col">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 class="text-lg font-bold text-gray-800">Inventario de Salas</h3>
-                <button type="button" class="btn-cerrar-modal text-gray-500 hover:text-red-500 text-xl font-bold">&times;</button>
+                <form id="form-password">
+                    <div class="modal-body text-start">
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">Contraseña Actual</label>
+                            <input type="password" id="pass-actual" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">Nueva Contraseña</label>
+                            <input type="password" id="pass-nueva" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-sm btn-intep fw-medium">Actualizar</button>
+                    </div>
+                </form>
             </div>
-            <div id="contenedor-lista-salas" class="space-y-3 overflow-y-auto flex-1 pr-2">
-                </div>
         </div>
     </div>
 
-    <div id="modal-editar-sala" class="modal-bg hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h3 class="text-lg font-bold mb-4 text-gray-800">Editar Sala</h3>
-            <form id="editar-sala-form" class="space-y-3">
-                <input type="hidden" id="edit-sala-id">
-                <div><label class="block text-sm font-medium">Nombre de la Sala</label><input type="text" id="edit-sala-nombre" class="w-full border p-2 rounded" required></div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium">Capacidad</label><input type="number" id="edit-sala-capacidad" class="w-full border p-2 rounded" required></div>
-                    <div><label class="block text-sm font-medium">PCs</label><input type="number" id="edit-sala-computadores" class="w-full border p-2 rounded" required></div>
+    <div class="modal fade" id="modal-usuarios" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold">Registrar Nueva Unidad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div><label class="block text-sm font-medium">Detalles</label><input type="text" id="edit-sala-detalles" class="w-full border p-2 rounded"></div>
-                <div class="flex justify-end space-x-2 mt-4 pt-2 border-t">
-                    <button type="button" class="btn-cerrar-modal px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 font-medium">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-300 font-bold">Guardar</button>
-                </div>
-            </form>
+                <form id="form-usuarios">
+                    <div class="modal-body text-start">
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">Nombre de la Unidad Académica</label>
+                            <input type="text" id="new-unidad" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">Usuario (Login)</label>
+                            <input type="text" id="new-username" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">Contraseña Inicial</label>
+                            <input type="password" id="new-password" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">Rol del Usuario</label>
+                            <select id="new-rol" class="form-select" required>
+                                <option value="UNIDAD">Unidad Académica</option>
+                                <option value="ADMIN">Administrador</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-sm btn-warning fw-bold text-dark">Crear Usuario</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
+    <div class="modal fade" id="modal-lista-salas" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold text-dark">Inventario de Salas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-start" style="max-height: 65vh; overflow-y: auto;">
+                    <div id="contenedor-lista-salas" class="d-flex flex-column gap-2">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-editar-sala" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold text-dark">Editar Sala</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editar-sala-form">
+                    <div class="modal-body text-start">
+                        <input type="hidden" id="edit-sala-id">
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">Nombre de la Sala</label>
+                            <input type="text" id="edit-sala-nombre" class="form-control" required>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col">
+                                <label class="form-label small fw-medium">Capacidad Alumnos</label>
+                                <input type="number" id="edit-sala-capacidad" class="form-control" required>
+                            </div>
+                            <div class="col">
+                                <label class="form-label small fw-medium">Cantidad PCs</label>
+                                <input type="number" id="edit-sala-computadores" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium">Detalles / Equipamiento</label>
+                            <input type="text" id="edit-sala-detalles" class="form-control">
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-sm text-white fw-bold" style="background-color: #6f42c1;">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
