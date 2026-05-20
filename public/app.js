@@ -1,52 +1,81 @@
 // ==========================================
-// VARIABLES GLOBALES Y REFERENCIAS DOM
+// ESTADO GLOBAL
 // ==========================================
 let currentUser = null;
 let listaGlobalAsignaciones = [];
-let listaGlobalSalas = []; 
-let vistaActual = 'calendario';
+let listaGlobalSalas = [];
 
-// Instancias de Modales de Bootstrap 5
+// Modales Bootstrap
 let bsModalPassword, bsModalUsuarios, bsModalSalas, bsModalEditarSala;
 
+// ==========================================
+// REFERENCIAS DOM
+// ==========================================
+const getElement = (id) => document.getElementById(id);
+
+const elements = {
+    loginView: getElement('login-view'),
+    dashboardView: getElement('dashboard-view'),
+    loginForm: getElement('login-form'),
+    loginError: getElement('login-error'),
+    userInfo: getElement('user-info'),
+    btnLogout: getElement('btn-logout'),
+    reservaForm: getElement('reserva-form'),
+    salaSelect: getElement('sala_id'),
+    tablaAsignaciones: getElement('tabla-asignaciones'),
+    filtroDia: getElement('filtro-dia'),
+    btnVista: getElement('btn-vista'),
+    contenedorLista: getElement('contenedor-lista'),
+    contenedorCalendario: getElement('contenedor-calendario'),
+    tbodyCalendario: getElement('tbody-calendario'),
+    theadSalasDinamicas: getElement('thead-salas-dinamicas'),
+    btnModalPassword: getElement('btn-modal-password'),
+    btnModalUsuarios: getElement('btn-modal-usuarios'),
+    btnModalSalas: getElement('btn-modal-salas'),
+    contenedorListaSalas: getElement('contenedor-lista-salas'),
+    formEditarSala: getElement('editar-sala-form')
+};
+
+// ==========================================
+// INICIALIZACIÓN
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    bsModalPassword = new bootstrap.Modal(document.getElementById('modal-password'));
-    bsModalUsuarios = new bootstrap.Modal(document.getElementById('modal-usuarios'));
-    bsModalSalas = new bootstrap.Modal(document.getElementById('modal-lista-salas'));
-    bsModalEditarSala = new bootstrap.Modal(document.getElementById('modal-editar-sala'));
+    bsModalPassword = new bootstrap.Modal(getElement('modal-password'));
+    bsModalUsuarios = new bootstrap.Modal(getElement('modal-usuarios'));
+    bsModalSalas = new bootstrap.Modal(getElement('modal-lista-salas'));
+    bsModalEditarSala = new bootstrap.Modal(getElement('modal-editar-sala'));
+    
+    inicializarEventos();
 });
 
-const loginView = document.getElementById('login-view');
-const dashboardView = document.getElementById('dashboard-view');
-const loginForm = document.getElementById('login-form');
-const loginError = document.getElementById('login-error');
-const userInfo = document.getElementById('user-info');
-const btnLogout = document.getElementById('btn-logout');
-const reservaForm = document.getElementById('reserva-form');
-const salaSelect = document.getElementById('sala_id');
-const tablaAsignaciones = document.getElementById('tabla-asignaciones');
-const filtroSala = document.getElementById('filtro-sala'); 
-
-const btnVista = document.getElementById('btn-vista');
-const contenedorLista = document.getElementById('contenedor-lista');
-const contenedorCalendario = document.getElementById('contenedor-calendario');
-const tbodyCalendario = document.getElementById('tbody-calendario');
-const theadSalasDinamicas = document.getElementById('thead-salas-dinamicas');
-
-// Botones de Modales
-const btnModalPassword = document.getElementById('btn-modal-password');
-const btnModalUsuarios = document.getElementById('btn-modal-usuarios');
-const btnModalSalas = document.getElementById('btn-modal-salas'); 
-const contenedorListaSalas = document.getElementById('contenedor-lista-salas'); 
-const formEditarSala = document.getElementById('editar-sala-form'); 
+function inicializarEventos() {
+    // Login y logout
+    elements.loginForm.addEventListener('submit', handleLogin);
+    elements.btnLogout.addEventListener('click', handleLogout);
+    
+    // Modales
+    elements.btnModalPassword.addEventListener('click', () => bsModalPassword.show());
+    elements.btnModalUsuarios.addEventListener('click', () => bsModalUsuarios.show());
+    elements.btnModalSalas.addEventListener('click', () => bsModalSalas.show());
+    
+    // Formularios
+    getElement('form-password').addEventListener('submit', handleCambiarPassword);
+    getElement('form-usuarios').addEventListener('submit', handleCrearUsuario);
+    elements.reservaForm.addEventListener('submit', handleCrearReserva);
+    elements.formEditarSala.addEventListener('submit', handleEditarSala);
+    
+    // Vista calendario/lista
+    elements.btnVista.addEventListener('click', toggleVista);
+    elements.filtroDia.addEventListener('change', actualizarCalendario);
+}
 
 // ==========================================
-// 1. CONTROL DE ACCESO (LOGIN & LOGOUT)
+// AUTENTICACIÓN
 // ==========================================
-loginForm.addEventListener('submit', async (e) => {
+async function handleLogin(e) {
     e.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+    const username = getElement('username').value;
+    const password = getElement('password').value;
 
     try {
         const response = await fetch('/api/login', {
@@ -58,296 +87,207 @@ loginForm.addEventListener('submit', async (e) => {
 
         if (response.ok) {
             currentUser = data;
-            loginError.classList.add('d-none');
+            elements.loginError.classList.add('d-none');
             mostrarDashboard();
         } else {
-            loginError.textContent = data.error;
-            loginError.classList.remove('d-none');
+            elements.loginError.textContent = data.error;
+            elements.loginError.classList.remove('d-none');
         }
-    } catch (error) { console.error("Error en login:", error); }
-});
+    } catch (error) {
+        console.error('Error en login:', error);
+    }
+}
 
-btnLogout.addEventListener('click', () => {
+function handleLogout() {
     currentUser = null;
-    loginForm.reset();
-    dashboardView.classList.add('d-none');
-    loginView.classList.remove('d-none');
-});
+    elements.loginForm.reset();
+    elements.dashboardView.classList.add('d-none');
+    elements.loginView.classList.remove('d-none');
+}
 
 async function mostrarDashboard() {
-    loginView.classList.add('d-none');
-    dashboardView.classList.remove('d-none');
-    userInfo.textContent = `${currentUser.nombre_unidad} [${currentUser.rol}]`;
+    elements.loginView.classList.add('d-none');
+    elements.dashboardView.classList.remove('d-none');
+    elements.userInfo.textContent = currentUser.nombre_unidad;
     
-    // Visibilidad de herramientas administrativas
-    if (currentUser.rol === 'ADMIN') {
-        btnModalUsuarios.classList.remove('d-none');
-        btnModalSalas.classList.remove('d-none');
-    } else {
-        btnModalUsuarios.classList.add('d-none');
-        btnModalSalas.classList.add('d-none');
-    }
+    // Mostrar controles admin
+    const isAdmin = currentUser.rol === 'ADMIN';
+    elements.btnModalUsuarios.classList.toggle('d-none', !isAdmin);
+    elements.btnModalSalas.classList.toggle('d-none', !isAdmin);
 
-    btnVista.textContent = 'Ver Lista';            // El botón ofrecerá pasar a la lista
-    contenedorLista.classList.add('d-none');         // Ocultamos la lista por defecto
-    contenedorCalendario.classList.remove('d-none'); // Mostramos el contenedor del calendario
+    // Vista por defecto: calendario
+    elements.btnVista.textContent = 'Ver Lista';
+    elements.contenedorLista.classList.add('d-none');
+    elements.contenedorCalendario.classList.remove('d-none');
 
     await cargarSalas();
     await cargarAsignaciones();
 }
 
 // ==========================================
-// 2. DISPARADORES DE MODALES BOOTSTRAP
-// ==========================================
-btnModalPassword.addEventListener('click', () => bsModalPassword.show());
-btnModalUsuarios.addEventListener('click', () => bsModalUsuarios.show());
-btnModalSalas.addEventListener('click', () => bsModalSalas.show());
-
-// ==========================================
-// 3. CONTROL DE INFRAESTRUCTURA (ADMIN)
-// ==========================================
-window.abrirEditarSala = function(id, nombre, capacidad, computadores, detalles) {
-    document.getElementById('edit-sala-id').value = id;
-    document.getElementById('edit-sala-nombre').value = nombre;
-    document.getElementById('edit-sala-capacidad').value = capacidad;
-    document.getElementById('edit-sala-computadores').value = computadores;
-    document.getElementById('edit-sala-detalles').value = detalles;
-    
-    bsModalSalas.hide(); 
-    bsModalEditarSala.show(); 
-};
-
-formEditarSala.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const id = document.getElementById('edit-sala-id').value;
-    const datos = {
-        nombre: document.getElementById('edit-sala-nombre').value,
-        capacidad: parseInt(document.getElementById('edit-sala-capacidad').value),
-        computadores: parseInt(document.getElementById('edit-sala-computadores').value),
-        detalles: document.getElementById('edit-sala-detalles').value,
-        rol_solicitante: currentUser.rol
-    };
-
-    try {
-        const res = await fetch(`/api/salas/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(datos)
-        });
-        const data = await res.json();
-        if(res.ok) {
-            alert('✅ ' + data.mensaje);
-            bsModalEditarSala.hide();
-            await cargarSalas(); 
-            await cargarAsignaciones(); 
-        } else {
-            alert('⛔ Error: ' + data.error);
-        }
-    } catch(err) { console.error(err); }
-});
-
-// ==========================================
-// 4. PROCESAMIENTO Y RENDERIZADO VISUAL
+// CARGA DE DATOS
 // ==========================================
 async function cargarSalas() {
     const response = await fetch('/api/salas');
     const salas = await response.json();
-    listaGlobalSalas = salas; 
+    listaGlobalSalas = salas;
     
-    salaSelect.innerHTML = '';
-    if (contenedorListaSalas) contenedorListaSalas.innerHTML = ''; 
+    // Llenar select de formulario
+    elements.salaSelect.innerHTML = salas.map(sala => 
+        `<option value="${sala.id}">${sala.nombre} (Cap: ${sala.capacidad}) (Comp: ${sala.computadores}) ${sala.detalles ? `(${sala.detalles})` : ''}</option>`
+    ).join('');
 
-    salas.forEach(sala => {
-        const optionForm = document.createElement('option');
-        optionForm.value = sala.id;
-        optionForm.textContent = `${sala.nombre} (Capacidad: ${sala.capacidad} estudiantes)`;
-        salaSelect.appendChild(optionForm);
-
-        // Renderizado del Inventario del Administrador
-        if (currentUser && currentUser.rol === 'ADMIN' && contenedorListaSalas) {
-            contenedorListaSalas.innerHTML += `
-                <div class="p-3 bg-light border rounded d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-1 fw-bold text-primary">${sala.nombre}</p>
-                        <p class="mb-1 text-muted small">👥 Capacidad: ${sala.capacidad} | 💻 Computadores: ${sala.computadores}</p>
-                        <p class="mb-0 text-secondary small" style="font-style: italic;">${sala.detalles || 'Sin especificaciones añadidas'}</p>
-                    </div>
-                    <button onclick="abrirEditarSala(${sala.id}, '${sala.nombre}', ${sala.capacidad}, ${sala.computadores}, '${sala.detalles || ''}')" 
-                            class="btn btn-sm btn-outline-secondary fw-bold">
-                        ✏️ Editar
-                    </button>
+    // Renderizar inventario admin
+    if (currentUser?.rol === 'ADMIN' && elements.contenedorListaSalas) {
+        elements.contenedorListaSalas.innerHTML = salas.map(sala => `
+            <div class="p-3 bg-light border rounded d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="fw-bold text-dark">${sala.nombre}</div>
+                    <div class="small text-muted">Capacidad: ${sala.capacidad} | Computadores: ${sala.computadores}</div>
+                    ${sala.detalles ? `<div class="small text-secondary">${sala.detalles}</div>` : ''}
                 </div>
-            `;
-        }
-    });
+                <button onclick="abrirEditarSala(${sala.id}, '${sala.nombre}', ${sala.capacidad}, ${sala.computadores}, '${sala.detalles || ''}')" 
+                        class="btn btn-sm text-white fw-bold" style="background-color: #6f42c1;">
+                    Editar
+                </button>
+            </div>
+        `).join('');
+    }
 }
 
 async function cargarAsignaciones() {
     const response = await fetch('/api/asignaciones');
     listaGlobalAsignaciones = await response.json();
-    renderizarVista();
+    actualizarVista();
 }
 
-btnVista.addEventListener('click', () => {
-    if(vistaActual === 'lista') {
-        vistaActual = 'calendario';
-        btnVista.textContent = 'Ver Lista';
-        contenedorLista.classList.add('d-none');
-        contenedorCalendario.classList.remove('d-none');
+// ==========================================
+// VISTAS
+// ==========================================
+function toggleVista() {
+    const mostrarCalendario = elements.contenedorCalendario.classList.contains('d-none');
+    
+    elements.contenedorCalendario.classList.toggle('d-none', !mostrarCalendario);
+    elements.contenedorLista.classList.toggle('d-none', mostrarCalendario);
+    elements.btnVista.textContent = mostrarCalendario ? 'Ver Lista' : 'Ver Calendario';
+    
+    actualizarVista();
+}
+
+function actualizarVista() {
+    if (!elements.contenedorCalendario.classList.contains('d-none')) {
+        actualizarCalendario();
     } else {
-        vistaActual = 'lista';
-        btnVista.textContent = 'Ver Calendario';
-        contenedorLista.classList.remove('d-none');
-        contenedorCalendario.classList.add('d-none');
+        actualizarLista();
     }
-    renderizarVista();
-});
-
-filtroSala.addEventListener('change', renderizarVista);
-
-function renderizarVista() {
-    if(vistaActual === 'lista') renderizarTabla();
-    else renderizarGrillaCalendario();
 }
 
-function renderizarTabla() {
-    tablaAsignaciones.innerHTML = '';
-    const diaFiltro = filtroSala.value; 
-    
-    const asignacionesFiltradas = listaGlobalAsignaciones.filter(asig => asig.dia_semana === diaFiltro);
-
-    asignacionesFiltradas.forEach(asig => {
-        const tr = document.createElement('tr');
+function actualizarLista() {
+    elements.tablaAsignaciones.innerHTML = listaGlobalAsignaciones.map(asig => {
         const isOwner = currentUser.rol === 'ADMIN' || asig.usuario_id === currentUser.id;
-        const btnDelete = isOwner ? `<button onclick="eliminarAsignacion(${asig.id})" class="btn btn-sm btn-outline-danger py-1 px-2 w-100 mt-2 fw-bold">Cancelar Reserva</button>` : '';
+        const btnDelete = isOwner ? 
+            `<button onclick="eliminarAsignacion(${asig.id})" class="btn btn-danger btn-sm">Eliminar</button>` : '';
 
-        tr.innerHTML = `
-            <td class="fw-bold text-primary">${asig.nombre_sala}</td>
-            <td class="fw-medium">${asig.dia_semana}</td>
-            <td><strong>${asig.hora_inicio} a ${asig.hora_fin}</strong><br><span class="text-muted small">${asig.fecha_inicio} al ${asig.fecha_fin}</span></td>
-            <td><span class="fw-bold text-dark">${asig.docente}</span><br><span class="text-muted small">${asig.asignatura}</span></td>
-            <td class="bg-light p-2 border-start">
-                <span class="d-block mb-1 fw-semibold text-secondary">${asig.nombre_unidad}</span>
-                ${btnDelete}
-            </td>
+        return `
+            <tr>
+                <td>${asig.nombre_sala}</td>
+                <td>${asig.dia_semana}</td>
+                <td>${asig.hora_inicio} - ${asig.hora_fin}</td>
+                <td>${asig.fecha_inicio} al ${asig.fecha_fin}</td>
+                <td>${asig.docente}<br><small class="text-muted">${asig.asignatura}</small></td>
+                <td>${asig.nombre_unidad}</td>
+                <td>${btnDelete}</td>
+            </tr>
         `;
-        tablaAsignaciones.appendChild(tr);
-    });
+    }).join('');
 }
 
-function renderizarGrillaCalendario() {
-    const diaFiltro = filtroSala.value; 
-    tbodyCalendario.innerHTML = '';
-    
-    // Generar dinámicamente las salas como columnas
-    theadSalasDinamicas.innerHTML = `<th style="width: 110px; vertical-align: middle;">HORA</th>`;
-    listaGlobalSalas.forEach(sala => {
-        theadSalasDinamicas.innerHTML += `<th style="vertical-align: middle;">${sala.nombre}</th>`;
-    });
+function actualizarCalendario() {
+    const diaSeleccionado = elements.filtroDia.value;
+    const asignacionesDelDia = listaGlobalAsignaciones.filter(a => a.dia_semana === diaSeleccionado);
 
-    const horas = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
-    const asignacionesDelDia = listaGlobalAsignaciones.filter(asig => asig.dia_semana === diaFiltro);
+    // Encabezados dinámicos
+    elements.theadSalasDinamicas.innerHTML = '<th class="bg-intep text-white">Hora</th>' + 
+        listaGlobalSalas.map(sala => 
+            `<th class="bg-intep text-white text-center">${sala.nombre}</th>`
+        ).join('');
 
-    // CONTROLADOR: Guarda hasta qué hora está ocupada cada sala para aplicar el "salto" de celda
+    // Generar filas por hora
+    elements.tbodyCalendario.innerHTML = '';
     const ocupadoHastaPorSala = {};
-    listaGlobalSalas.forEach(sala => {
-        ocupadoHastaPorSala[sala.nombre] = 0;
-    });
-
-    horas.forEach(hora => {
+    
+    for (let hora = 7; hora <= 21; hora++) {
         const tr = document.createElement('tr');
-        
-        // Calcula formato 12h con a.m. y p.m.
         const ampm = hora >= 12 ? 'p.m.' : 'a.m.';
         const hora12 = hora > 12 ? hora - 12 : hora;
-        const horaStr = `${hora12.toString().padStart(2, '0')}:00 ${ampm}`;
+        const horaStr = `${String(hora12).padStart(2, '0')}:00 ${ampm}`;
         
         tr.innerHTML = `<td class="bg-light fw-bold text-secondary align-middle text-center" style="font-size: 11px;">${horaStr}</td>`;
 
         listaGlobalSalas.forEach(sala => {
-            
-            // Si la hora actual ya está cubierta por un bloque superior, se omite esta celda
-            if (hora < ocupadoHastaPorSala[sala.nombre]) {
-                return; 
-            }
+            if (hora < (ocupadoHastaPorSala[sala.nombre] || 0)) return;
 
-            // CAMBIO CLAVE: Usamos .filter() para traer TODAS las reservas que inician a esta hora
-            const reservasEnEstaHora = asignacionesDelDia.filter(asig => {
-                if (asig.nombre_sala !== sala.nombre) return false;
-                const hInicio = parseInt(asig.hora_inicio.split(':')[0]);
-                return hInicio === hora; 
-            });
+            const reservasEnEstaHora = asignacionesDelDia.filter(asig => 
+                asig.nombre_sala === sala.nombre && parseInt(asig.hora_inicio.split(':')[0]) === hora
+            );
 
             if (reservasEnEstaHora.length > 0) {
-                // Tomamos la hora de fin mayor en caso de que una reserva dure más que la otra
                 const maxHFin = Math.max(...reservasEnEstaHora.map(r => parseInt(r.hora_fin.split(':')[0])));
-                const filasSpan = maxHFin - hora; 
-                
-                // BLOQUEAR EL ESPACIO HACIA ABAJO PARA ESTA SALA
+                const filasSpan = maxHFin - hora;
                 ocupadoHastaPorSala[sala.nombre] = maxHFin;
 
-                // 1. Abrimos la celda principal con el rowspan (usamos un fondo neutro elegante)
-                let contenidoCelda = `<td rowspan="${filasSpan}" class="align-middle p-2 border-info border-opacity-25" style="background-color: #f0f7fc; transition: background-color 0.2s;">
-                    <div class="d-flex flex-column h-100 justify-content-center align-items-center w-100 gap-2">`;
+                const estilosCards = [
+                    { bg: 'bg-white text-dark', border: 'border-start border-gray border-1' },
+                    { bg: 'bg-light text-dark', border: 'border-start border-success border-1' },
+                    { bg: 'bg-white text-dark', border: 'border-start border-warning border-1' }
+                ];
 
-                // 2. Iteramos sobre cada reserva creando tarjetas con colores de periodos diferenciados
-                reservasEnEstaHora.forEach((reserva, index) => {
-                    const isOwner = currentUser.rol === 'ADMIN' || reserva.usuario_id === currentUser.id;
-                    const btnDelete = isOwner ? `<button onclick="eliminarAsignacion(${reserva.id})" class="btn btn-danger text-white py-0 px-1 btn-sm w-100 mt-2 fw-bold" style="font-size: 10px;">Liberar</button>` : '';
-                    
-                    // CONFIGURACIÓN DE COLORES EXCLUSIVOS POR PERIODO
-                    // Primera reserva: Tarjeta blanca con borde azul izquierdo
-                    // Segunda reserva: Tarjeta gris claro con borde verde izquierdo (puedes añadir más si es necesario)
-                    const estilosCards = [
-                        { bg: 'bg-white text-dark', border: 'border-start border-1' },
-                        { bg: 'bg-light text-dark border', border: 'border-start border-1' },
-                        { bg: 'bg-white text-dark', border: 'border-start border-1 border-warning' }
-                    ];
-                    
-                    // Elegimos el estilo según el orden de la reserva
-                    const estiloActual = estilosCards[index % estilosCards.length];
+                const contenidoCelda = `
+                    <td rowspan="${filasSpan}" class="align-middle p-2" style="background-color: #f0f7fc;">
+                        <div class="d-flex flex-column gap-2">
+                            ${reservasEnEstaHora.map((reserva, index) => {
+                                const isOwner = currentUser.rol === 'ADMIN' || reserva.usuario_id === currentUser.id;
+                                const btnDelete = isOwner ? 
+                                    `<button onclick="eliminarAsignacion(${reserva.id})" class="btn btn-danger text-white py-0 px-1 btn-sm w-100 mt-2 fw-bold" style="font-size: 10px;">Liberar</button>` : '';
+                                const estilo = estilosCards[index % estilosCards.length];
 
-                    contenidoCelda += `
-                        <div class="card ${estiloActual.bg} ${estiloActual.border} shadow-sm w-100 p-2 text-center rounded-2" style="font-size: 11px; line-height: 1.3;">
-                            
-                            <div>
-                                <span class="fw-bold text-intep d-block mb-1" style="font-size: 12px;">${reserva.asignatura}</span>
-                                <span class="text-dark d-block fw-semibold mb-1" style="font-size: 11px;">${reserva.docente}</span>
-                            </div>
-
-                            <div class="mb-2">
-                                <span class="badge bg-dark bg-opacity-75 text-white px-2 py-1" style="font-size: 9px; font-weight: 600; letter-spacing: 0.3px;">
-                                    ${reserva.fecha_inicio} al ${reserva.fecha_fin}
-                                </span>
-                            </div>
-                            
-                            <div class="mt-2 pt-1 border-top border-light w-100">
-                                <span class="d-block fw-bold text-uppercase text-muted" style="font-size: 9px; letter-spacing: 0.2px;">${reserva.nombre_unidad}</span>
-                                ${btnDelete}
-                            </div>
+                                return `
+                                    <div class="card ${estilo.bg} ${estilo.border} shadow-sm p-2 text-center" style="font-size: 11px;">
+                                        <div class="fw-bold text-intep mb-1" style="font-size: 12px;">${reserva.asignatura}</div>
+                                        <div class="text-dark fw-semibold mb-1" style="font-size: 11px;">${reserva.docente}</div>
+                                        <div class="mb-2">
+                                            <span class="badge bg-dark bg-opacity-75 px-2 py-1" style="font-size: 9px;">
+                                                ${reserva.fecha_inicio} al ${reserva.fecha_fin}
+                                            </span>
+                                        </div>
+                                        <div class="pt-1 border-top">
+                                            <span class="d-block fw-bold text-uppercase text-muted" style="font-size: 9px;">${reserva.nombre_unidad}</span>
+                                            ${btnDelete}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
-                    `;
-                });
-
-                // 3. Cerramos el contenedor y la celda
-                contenidoCelda += `</div></td>`;
+                    </td>
+                `;
                 tr.innerHTML += contenidoCelda;
-
             } else {
-                tr.innerHTML += `<td class="bg-white celda-reserva"></td>`;
+                tr.innerHTML += '<td class="bg-white celda-reserva"></td>';
             }
         });
-        tbodyCalendario.appendChild(tr);
-    });
+        
+        elements.tbodyCalendario.appendChild(tr);
+    }
 }
 
 // ==========================================
-// 5. ACCIONES ADICIONALES (POST / PUT / DELETE)
+// ACCIONES DE FORMULARIOS
 // ==========================================
-document.getElementById('form-password').addEventListener('submit', async (e) => {
+async function handleCambiarPassword(e) {
     e.preventDefault();
-    const currentPassword = document.getElementById('pass-actual').value;
-    const newPassword = document.getElementById('pass-nueva').value;
+    const currentPassword = getElement('pass-actual').value;
+    const newPassword = getElement('pass-nueva').value;
+    
     try {
         const response = await fetch('/api/usuarios/password', {
             method: 'PUT',
@@ -355,23 +295,29 @@ document.getElementById('form-password').addEventListener('submit', async (e) =>
             body: JSON.stringify({ usuario_id: currentUser.id, currentPassword, newPassword })
         });
         const data = await response.json();
+        
         if (response.ok) {
-            alert("✅ " + data.message);
+            alert('✅ ' + data.message);
             bsModalPassword.hide();
             e.target.reset();
-        } else alert("⛔ Error: " + data.error);
-    } catch (error) { console.error(error); }
-});
+        } else {
+            alert('⛔ Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
 
-document.getElementById('form-usuarios').addEventListener('submit', async (e) => {
+async function handleCrearUsuario(e) {
     e.preventDefault();
     const newUser = {
         admin_id: currentUser.id,
-        nombre_unidad: document.getElementById('new-unidad').value,
-        username: document.getElementById('new-username').value,
-        password: document.getElementById('new-password').value,
-        rol: document.getElementById('new-rol').value
+        nombre_unidad: getElement('new-unidad').value,
+        username: getElement('new-username').value,
+        password: getElement('new-password').value,
+        rol: getElement('new-rol').value
     };
+    
     try {
         const response = await fetch('/api/usuarios', {
             method: 'POST',
@@ -379,28 +325,33 @@ document.getElementById('form-usuarios').addEventListener('submit', async (e) =>
             body: JSON.stringify(newUser)
         });
         const data = await response.json();
+        
         if (response.ok) {
-            alert("✅ " + data.message);
+            alert('✅ ' + data.message);
             bsModalUsuarios.hide();
             e.target.reset();
-        } else alert("⛔ Error: " + data.error);
-    } catch (error) { console.error(error); }
-});
+        } else {
+            alert('⛔ Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
 
-reservaForm.addEventListener('submit', async (e) => {
+async function handleCrearReserva(e) {
     e.preventDefault();
-    
     const nuevaReserva = {
-        sala_id: document.getElementById('sala_id').value,
+        sala_id: elements.salaSelect.value,
         usuario_id: currentUser.id,
-        docente: document.getElementById('docente').value,
-        asignatura: document.getElementById('asignatura').value,
-        fecha_inicio: document.getElementById('fecha_inicio').value,
-        fecha_fin: document.getElementById('fecha_fin').value,
-        dia_semana: document.getElementById('dia_semana').value,
-        hora_inicio: document.getElementById('hora_inicio').value,
-        hora_fin: document.getElementById('hora_fin').value,
+        docente: getElement('docente').value,
+        asignatura: getElement('asignatura').value,
+        fecha_inicio: getElement('fecha_inicio').value,
+        fecha_fin: getElement('fecha_fin').value,
+        dia_semana: elements.filtroDia.value,
+        hora_inicio: getElement('hora_inicio').value,
+        hora_fin: getElement('hora_fin').value
     };
+    
     try {
         const response = await fetch('/api/asignaciones', {
             method: 'POST',
@@ -408,23 +359,175 @@ reservaForm.addEventListener('submit', async (e) => {
             body: JSON.stringify(nuevaReserva)
         });
         const data = await response.json();
+        
         if (response.ok) {
-            alert("¡Reserva guardada con éxito!");
-            reservaForm.reset();
+            alert('¡Reserva guardada con éxito!');
+            elements.reservaForm.reset();
             cargarAsignaciones();
-        } else alert("⛔ ERROR: " + data.error);
-    } catch (error) { console.error("Error al guardar:", error); }
-});
+        } else {
+            alert('⛔ ERROR: ' + data.error + (data.detalle ? '\n' + data.detalle : ''));
+        }
+    } catch (error) {
+        console.error('Error al guardar:', error);
+    }
+}
+
+async function handleEditarSala(e) {
+    e.preventDefault();
+    const id = getElement('edit-sala-id').value;
+    const datos = {
+        nombre: getElement('edit-sala-nombre').value,
+        capacidad: parseInt(getElement('edit-sala-capacidad').value),
+        computadores: parseInt(getElement('edit-sala-computadores').value),
+        detalles: getElement('edit-sala-detalles').value,
+        rol_solicitante: currentUser.rol
+    };
+
+    try {
+        const response = await fetch(`/api/salas/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datos)
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('✅ ' + data.mensaje);
+            bsModalEditarSala.hide();
+            await cargarSalas();
+            await cargarAsignaciones();
+        } else {
+            alert('⛔ Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
 
 async function eliminarAsignacion(id) {
-    if(!confirm('⚠️ ¿Estás seguro de que deseas liberar esta sala?')) return;
+    if (!confirm('⚠️ ¿Estás seguro de que deseas liberar esta sala?')) return;
+    
     try {
         const response = await fetch(`/api/asignaciones/${id}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ usuario_id: currentUser.id, rol: currentUser.rol })
         });
-        if (response.ok) cargarAsignaciones();
-        else alert("Error: " + (await response.json()).error);
-    } catch (error) { console.error("Error al eliminar:", error); }
+        
+        if (response.ok) {
+            cargarAsignaciones();
+        } else {
+            const data = await response.json();
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error al eliminar:', error);
+    }
 }
+
+// ==========================================
+// CRONOGRAMA PÚBLICO (visible sin login)
+// ==========================================
+(async function iniciarCronogramaPublico() {
+    // Cargamos salas y asignaciones sin necesitar usuario logueado
+    const [resSalas, resAsig] = await Promise.all([
+        fetch('/api/salas'),
+        fetch('/api/asignaciones')
+    ]);
+    const salasPublicas = await resSalas.json();
+    const asignacionesPublicas = await resAsig.json();
+
+    function renderizarPublico(dia) {
+        const theadPublico = document.getElementById('thead-publico');
+        const tbodyPublico = document.getElementById('tbody-publico');
+        if (!theadPublico || !tbodyPublico) return;
+
+        // Cabecera con nombres de salas
+        theadPublico.innerHTML = '<th class="bg-intep text-white" style="min-width:80px;">Hora</th>';
+        salasPublicas.forEach(sala => {
+            theadPublico.innerHTML += `<th class="bg-intep text-white" style="min-width:160px;">${sala.nombre}</th>`;
+        });
+
+        // Filtrar asignaciones del día seleccionado
+        const asigDelDia = asignacionesPublicas.filter(a => a.dia_semana === dia);
+
+        // Mismo rango de horas que el calendario del dashboard
+        const horaInicio = 6;
+        const horaFin = 22;
+        tbodyPublico.innerHTML = '';
+
+        const ocupadoHasta = {};
+        salasPublicas.forEach(s => ocupadoHasta[s.nombre] = 0);
+
+        for (let hora = horaInicio; hora < horaFin; hora++) {
+            const tr = document.createElement('tr');
+            const ampm = hora >= 12 ? 'p.m.' : 'a.m.';
+            const hora12 = hora > 12 ? hora - 12 : hora;
+            tr.innerHTML = `<td class="bg-light fw-bold text-secondary align-middle text-center" style="font-size:11px;">${hora12.toString().padStart(2,'0')}:00 ${ampm}</td>`;
+
+            salasPublicas.forEach(sala => {
+                if (hora < ocupadoHasta[sala.nombre]) return;
+
+                const reservasAqui = asigDelDia.filter(a => {
+                    if (a.nombre_sala !== sala.nombre) return false;
+                    return parseInt(a.hora_inicio.split(':')[0]) === hora;
+                });
+
+                if (reservasAqui.length > 0) {
+                    const maxHFin = Math.max(...reservasAqui.map(r => parseInt(r.hora_fin.split(':')[0])));
+                    const span = maxHFin - hora;
+                    ocupadoHasta[sala.nombre] = maxHFin;
+
+                    let celda = `<td rowspan="${span}" class="align-middle p-2" style="background-color:#f0f7fc;">
+                        <div class="d-flex flex-column gap-2 align-items-center">`;
+
+                    reservasAqui.forEach(reserva => {
+                        celda += `
+                            <div class="card bg-white shadow-sm w-100 p-2 text-center rounded-2" style="font-size:11px; line-height:1.3; border-left: 3px solid #0099db;">
+                                <span class="fw-bold text-intep d-block mb-1" style="font-size:12px;">${reserva.asignatura}</span>
+                                <span class="text-dark d-block fw-semibold mb-1">${reserva.docente}</span>
+                                <span class="badge bg-dark bg-opacity-75 text-white px-2 py-1" style="font-size:9px;">
+                                    ${reserva.fecha_inicio} al ${reserva.fecha_fin}
+                                </span>
+                            </div>`;
+                    });
+
+                    celda += `</div></td>`;
+                    tr.innerHTML += celda;
+                } else {
+                    tr.innerHTML += `<td class="bg-white"></td>`;
+                }
+            });
+
+            tbodyPublico.appendChild(tr);
+        }
+    }
+
+    // Renderizar cuando se abre el modal
+    const modalEl = document.getElementById('modal-cronograma-publico');
+    modalEl.addEventListener('show.bs.modal', () => {
+        const diaActual = document.getElementById('filtro-dia-publico').value;
+        renderizarPublico(diaActual);
+    });
+
+    // Actualizar al cambiar el día
+    document.getElementById('filtro-dia-publico').addEventListener('change', function () {
+        renderizarPublico(this.value);
+    });
+})();
+
+// ==========================================
+// FUNCIONES GLOBALES (llamadas desde HTML)
+// ==========================================
+window.abrirEditarSala = function(id, nombre, capacidad, computadores, detalles) {
+    getElement('edit-sala-id').value = id;
+    getElement('edit-sala-nombre').value = nombre;
+    getElement('edit-sala-capacidad').value = capacidad;
+    getElement('edit-sala-computadores').value = computadores;
+    getElement('edit-sala-detalles').value = detalles;
+    
+    bsModalSalas.hide();
+    bsModalEditarSala.show();
+};
+
+window.eliminarAsignacion = eliminarAsignacion;
