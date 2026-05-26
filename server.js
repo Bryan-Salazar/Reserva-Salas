@@ -66,21 +66,25 @@ app.post('/api/asignaciones', (req, res) => {
         fecha_inicio, fecha_fin, dia_semana, hora_inicio, hora_fin 
     } = req.body;
 
+    // Modificado: Ahora vinculamos la tabla usuarios para conocer el nombre_unidad de la reserva conflictiva
     const queryVerificacion = `
-        SELECT * FROM asignaciones 
-        WHERE sala_id = ? 
-        AND dia_semana = ?
-        AND (fecha_inicio <= ? AND fecha_fin >= ?) 
-        AND (hora_inicio < ? AND hora_fin > ?)
+        SELECT a.*, u.nombre_unidad 
+        FROM asignaciones a
+        JOIN usuarios u ON a.usuario_id = u.id
+        WHERE a.sala_id = ? 
+        AND a.dia_semana = ?
+        AND (a.fecha_inicio <= ? AND a.fecha_fin >= ?) 
+        AND (a.hora_inicio < ? AND a.hora_fin > ?)
     `;
 
     db.all(queryVerificacion, [sala_id, dia_semana, fecha_fin, fecha_inicio, hora_fin, hora_inicio], (err, rows) => {
         if (err) return res.status(500).json({ error: 'Error comprobando disponibilidad' });
 
         if (rows.length > 0) {
+            // Modificado: Mensaje personalizado y dinámico con la unidad responsable del bloqueo
             return res.status(400).json({ 
                 error: '¡Cruce de horario detectado!', 
-                detalle: `La sala ya está reservada por ${rows[0].docente} para la asignatura ${rows[0].asignatura} en este horario.`
+                detalle: `La sala ya está ocupada por el docente ${rows[0].docente} para la asignatura "${rows[0].asignatura}".\n\n💡 Por favor, comunícate con la "${rows[0].nombre_unidad}" para gestionar tu asignación.`
             });
         }
 
