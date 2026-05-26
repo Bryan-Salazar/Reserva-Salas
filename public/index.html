@@ -131,9 +131,11 @@
                     <div class="card shadow-sm p-4 border-0">
                         <h3 class="h5 fw-bold mb-3 border-bottom pb-2 text-dark">Nueva Reserva de Sala</h3>
                         <form id="reserva-form" class="small">
-                            <div class="mb-2">
+                            <div class="mb-3">
                                 <label class="form-label fw-medium mb-1">Sala</label>
-                                <select id="sala_id" class="form-select form-select-sm" required></select>
+                                <select id="sala_id" class="form-select form-select-sm fw-bold text-intep" required></select>
+                                <div id="sala-detalles-info" class="mt-1 p-2 bg-light border rounded text-secondary d-none" style="font-size: 11px; line-height: 1.4;">
+                                </div>
                             </div>
                             <div class="mb-2">
                                 <label class="form-label fw-medium mb-1">Docente</label>
@@ -354,7 +356,7 @@
                     </div>
                     <div class="text-center flex-grow-1">
                         <h5 class="modal-title fw-bold mb-0">CRONOGRAMA DE SALAS</h5>
-                        <small class="opacity-75">Consulta pública</small>
+                        <small class="opacity-75">Consulta pública (Solo lectura)</small>
                     </div>
                     <div>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>

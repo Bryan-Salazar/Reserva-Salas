@@ -21,6 +21,7 @@ const elements = {
     btnLogout: getElement('btn-logout'),
     reservaForm: getElement('reserva-form'),
     salaSelect: getElement('sala_id'),
+    salaDetallesInfo: getElement('sala-detalles-info'), // NUEVO ELEMENTO
     tablaAsignaciones: getElement('tabla-asignaciones'),
     filtroDia: getElement('filtro-dia'),
     btnVista: getElement('btn-vista'),
@@ -46,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bsModalDetalle = new bootstrap.Modal(getElement('modal-detalle-reserva'));
     
     inicializarEventos();
-    precargarDatosPublicos(); // Permite que el cronograma público funcione antes del login
+    precargarDatosPublicos();
 });
 
 function inicializarEventos() {
@@ -65,9 +66,12 @@ function inicializarEventos() {
     elements.reservaForm.addEventListener('submit', handleCrearReserva);
     elements.formEditarSala.addEventListener('submit', handleEditarSala);
     
-    /* ===== Vista calendario/lista ===== */
+    /* ===== Comportamientos Dinámicos ===== */
     elements.btnVista.addEventListener('click', toggleVista);
     elements.filtroDia.addEventListener('change', actualizarCalendario);
+    
+    // NUEVO EVENTO: Detectar cambio en el select de salas
+    elements.salaSelect.addEventListener('change', actualizarInfoSala);
 
     /* ===== Eventos Cronograma Público ===== */
     const modalPublico = getElement('modal-cronograma-publico');
@@ -78,6 +82,27 @@ function inicializarEventos() {
     if (filtroPublico) {
         filtroPublico.addEventListener('change', actualizarCronogramaPublico);
     }
+}
+
+
+/* ===== FORMATOS DE PRESENTACIÓN AMIGABLES ===== */
+
+function formatearHoraAMPM(horaStr) {
+    if (!horaStr) return '';
+    const partes = horaStr.split(':');
+    let horas = parseInt(partes[0], 10);
+    const minutos = partes[1];
+    const ampm = horas >= 12 ? 'PM' : 'AM';
+    horas = horas % 12;
+    horas = horas ? horas : 12; 
+    return `${horas}:${minutos} ${ampm}`;
+}
+
+function formatearFecha(fechaStr) {
+    if (!fechaStr) return '';
+    const partes = fechaStr.split('-');
+    if (partes.length !== 3) return fechaStr;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`; 
 }
 
 
@@ -121,12 +146,10 @@ async function mostrarDashboard() {
     elements.dashboardView.classList.remove('d-none');
     elements.userInfo.textContent = currentUser.nombre_unidad;
     
-    /* ===== Mostrar controles admin ===== */
     const isAdmin = currentUser.rol === 'ADMIN';
     elements.btnModalUsuarios.classList.toggle('d-none', !isAdmin);
     elements.btnModalSalas.classList.toggle('d-none', !isAdmin);
 
-    /* ===== Vista por defecto: calendario ===== */
     elements.btnVista.textContent = 'Ver Lista';
     elements.contenedorLista.classList.add('d-none');
     elements.contenedorCalendario.classList.remove('d-none');
@@ -158,8 +181,11 @@ async function cargarSalas() {
     
     /* ===== Llenar select de formulario ===== */
     elements.salaSelect.innerHTML = salas.map(sala => 
-        `<option value="${sala.id}">${sala.nombre} (Cap: ${sala.capacidad}) (Comp: ${sala.computadores}) ${sala.detalles ? `(${sala.detalles})` : ''}</option>`
+        `<option value="${sala.id}">${sala.nombre}</option>`
     ).join('');
+
+    // Disparamos la función manualmente la primera vez para mostrar info de la primera sala
+    actualizarInfoSala();
 
     /* ===== Renderizar inventario admin ===== */
     if (currentUser?.rol === 'ADMIN' && elements.contenedorListaSalas) {
@@ -170,8 +196,7 @@ async function cargarSalas() {
                     <div class="small text-muted">Capacidad: ${sala.capacidad} | Computadores: ${sala.computadores}</div>
                     ${sala.detalles ? `<div class="small text-secondary">${sala.detalles}</div>` : ''}
                 </div>
-                <button onclick="abrirEditarSala(${sala.id}, '${sala.nombre}', ${sala.capacidad}, ${sala.computadores}, '${sala.detalles || ''}')" 
-                        class="btn btn-intep text-white fw-bold">
+                <button onclick="abrirEditarSala(${sala.id})" class="btn btn-intep text-white fw-bold">
                     Editar
                 </button>
             </div>
@@ -187,6 +212,26 @@ async function cargarAsignaciones() {
 
 
 /* ===== VISTAS ===== */
+
+// NUEVA FUNCIÓN: Muestra la info de la sala seleccionada debajo del <select>
+function actualizarInfoSala() {
+    const salaId = parseInt(elements.salaSelect.value);
+    const sala = listaGlobalSalas.find(s => s.id === salaId);
+    
+    if (sala) {
+        elements.salaDetallesInfo.classList.remove('d-none');
+        elements.salaDetallesInfo.innerHTML = `
+            <div class="d-flex justify-content-between mb-1">
+                <span><strong class="text-dark">Capacidad:</strong> ${sala.capacidad} pers.</span>
+                <span><strong class="text-dark">PCs:</strong> ${sala.computadores} unds.</span>
+            </div>
+            ${sala.detalles ? `<div class="border-top pt-1 mt-1"><strong class="text-dark">Detalles:</strong> ${sala.detalles}</div>` : ''}
+        `;
+    } else {
+        elements.salaDetallesInfo.classList.add('d-none');
+        elements.salaDetallesInfo.innerHTML = '';
+    }
+}
 
 function toggleVista() {
     const mostrarCalendario = elements.contenedorCalendario.classList.contains('d-none');
@@ -212,12 +257,15 @@ function actualizarLista() {
         const btnDelete = isOwner ? 
             `<button onclick="eliminarAsignacion(${asig.id})" class="btn btn-danger btn-sm">Eliminar</button>` : '';
 
+        const horarioAmPm = `${formatearHoraAMPM(asig.hora_inicio)} - ${formatearHoraAMPM(asig.hora_fin)}`;
+        const periodoFormato = `${formatearFecha(asig.fecha_inicio)} al ${formatearFecha(asig.fecha_fin)}`;
+
         return `
             <tr>
                 <td>${asig.nombre_sala}</td>
                 <td>${asig.dia_semana}</td>
-                <td>${asig.hora_inicio} - ${asig.hora_fin}</td>
-                <td>${asig.fecha_inicio} al ${asig.fecha_fin}</td>
+                <td>${horarioAmPm}</td>
+                <td>${periodoFormato}</td>
                 <td>${asig.docente}<br><small class="text-muted">${asig.asignatura}</small></td>
                 <td>${asig.nombre_unidad}</td>
                 <td>${btnDelete}</td>
@@ -256,7 +304,6 @@ function obtenerHoraNumerica(horaStr) {
 function renderizarGrillaCore(theadElement, tbodyElement, diaSeleccionado, esPublico = false) {
     if (!theadElement || !tbodyElement) return;
 
-    /* ===== Cabeceras dinámicas con ANCHO FIJO ===== */
     theadElement.innerHTML = `<th style="width: 90px; min-width: 90px; vertical-align: middle;" class="bg-intep text-white text-center">Hora</th>` + 
         listaGlobalSalas.map(sala => 
             `<th style="width: 220px; min-width: 220px; vertical-align: middle;" class="bg-intep text-white text-center">${sala.nombre}</th>`
@@ -268,7 +315,6 @@ function renderizarGrillaCore(theadElement, tbodyElement, diaSeleccionado, esPub
 
     const asignacionesDelDia = listaGlobalAsignaciones.filter(a => a.dia_semana === diaSeleccionado);
 
-    /* ===== Rango unificado extendido (6 a.m. a 10 p.m.) ===== */
     for (let hora = 6; hora <= 22; hora++) {
         const tr = document.createElement('tr');
         const ampm = hora >= 12 ? 'p.m.' : 'a.m.';
@@ -290,7 +336,6 @@ function renderizarGrillaCore(theadElement, tbodyElement, diaSeleccionado, esPub
                 const filasSpan = maxHFin - hora;
                 ocupadoHastaPorSala[sala.nombre] = maxHFin;
 
-                // Paleta de colores elegantes para los bordes izquierdos
                 const coloresBordes = ['#0099db', '#2ec4b6', '#ff9f1c', '#e71d36'];
 
                 tr.innerHTML += `
@@ -298,12 +343,11 @@ function renderizarGrillaCore(theadElement, tbodyElement, diaSeleccionado, esPub
                         <div class="d-flex flex-column gap-2">
                             ${reservasEnEstaHora.map((reserva, index) => {
                                 const isOwner = !esPublico && currentUser && (currentUser.rol === 'ADMIN' || reserva.usuario_id === currentUser.id);
-                                
-                                // event.stopPropagation() evita que el clic en "Liberar" abra el zoom por accidente
                                 const btnDelete = isOwner ? 
                                     `<button onclick="event.stopPropagation(); eliminarAsignacion(${reserva.id})" class="btn btn-danger text-white py-0 px-1 btn-sm w-100 mt-2 fw-bold" style="font-size: 10px;">Liberar</button>` : '';
                                 
                                 const colorBorde = coloresBordes[index % coloresBordes.length];
+                                const fechaFormat = `${formatearFecha(reserva.fecha_inicio)} al ${formatearFecha(reserva.fecha_fin)}`;
 
                                 return `
                                     <div onclick="abrirDetalleReserva(${reserva.id}, event)" 
@@ -313,7 +357,7 @@ function renderizarGrillaCore(theadElement, tbodyElement, diaSeleccionado, esPub
                                         <div class="text-dark fw-semibold mb-1" style="font-size: 11px;">${reserva.docente}</div>
                                         <div class="mb-2">
                                             <span class="badge bg-dark bg-opacity-75 text-white px-2 py-1" style="font-size: 9px;">
-                                                ${reserva.fecha_inicio} al ${reserva.fecha_fin}
+                                                ${fechaFormat}
                                             </span>
                                         </div>
                                         <div class="pt-1 border-top">
@@ -327,7 +371,6 @@ function renderizarGrillaCore(theadElement, tbodyElement, diaSeleccionado, esPub
                     </td>
                 `;
             } else {
-                // Si es público, la celda es blanca estática, si es privado tiene clase interactiva
                 const claseCelda = esPublico ? 'bg-white' : 'bg-white celda-reserva';
                 tr.innerHTML += `<td class="${claseCelda}"></td>`;
             }
@@ -404,7 +447,7 @@ async function handleCrearReserva(e) {
         asignatura: getElement('asignatura').value,
         fecha_inicio: getElement('fecha_inicio').value,
         fecha_fin: getElement('fecha_fin').value,
-        dia_semana: elements.filtroDia.value, // Captura de forma automática el día activo en la pantalla
+        dia_semana: elements.filtroDia.value,
         hora_inicio: getElement('hora_inicio').value,
         hora_fin: getElement('hora_fin').value
     };
@@ -420,9 +463,10 @@ async function handleCrearReserva(e) {
         if (response.ok) {
             alert('¡Reserva guardada con éxito!');
             elements.reservaForm.reset();
+            actualizarInfoSala(); // Reseteamos la vista de detalles al limpiar formulario
             cargarAsignaciones();
         } else {
-            alert('⛔ ERROR: ' + data.error + (data.detalle ? '\n' + data.detalle : ''));
+            alert('⛔ ERROR: ' + data.error + (data.detalle ? '\n\n' + data.detalle : ''));
         }
     } catch (error) {
         console.error('Error al guardar:', error);
@@ -453,6 +497,12 @@ async function handleEditarSala(e) {
             bsModalEditarSala.hide();
             await cargarSalas();
             await cargarAsignaciones();
+            
+            // Volver a abrir la lista de salas automáticamente para mayor comodidad
+            setTimeout(() => {
+                bsModalSalas.show();
+            }, 400); // Pequeña pausa de 400ms para evitar que los modales de Bootstrap se traben al cruzar animaciones
+
         } else {
             alert('⛔ Error: ' + data.error);
         }
@@ -485,12 +535,16 @@ async function eliminarAsignacion(id) {
 
 /* ===== FUNCIONES GLOBALES (llamadas desde HTML) ===== */
 
-window.abrirEditarSala = function(id, nombre, capacidad, computadores, detalles) {
-    getElement('edit-sala-id').value = id;
-    getElement('edit-sala-nombre').value = nombre;
-    getElement('edit-sala-capacidad').value = capacidad;
-    getElement('edit-sala-computadores').value = computadores;
-    getElement('edit-sala-detalles').value = detalles;
+window.abrirEditarSala = function(id) {
+    // Buscamos la sala directamente de la memoria para evitar errores de comillas
+    const sala = listaGlobalSalas.find(s => s.id === id);
+    if (!sala) return;
+
+    getElement('edit-sala-id').value = sala.id;
+    getElement('edit-sala-nombre').value = sala.nombre;
+    getElement('edit-sala-capacidad').value = sala.capacidad;
+    getElement('edit-sala-computadores').value = sala.computadores;
+    getElement('edit-sala-detalles').value = sala.detalles || '';
     
     bsModalSalas.hide();
     bsModalEditarSala.show();
@@ -502,13 +556,17 @@ window.abrirDetalleReserva = function(id, event) {
     const reserva = listaGlobalAsignaciones.find(a => a.id === id);
     if (!reserva) return;
 
-    // Poblar el modal de zoom
     getElement('zoom-asignatura').textContent = reserva.asignatura;
     getElement('zoom-docente').textContent = reserva.docente;
     getElement('zoom-sala').textContent = reserva.nombre_sala;
     getElement('zoom-dia').textContent = reserva.dia_semana;
-    getElement('zoom-horario').textContent = `${reserva.hora_inicio} - ${reserva.hora_fin}`;
-    getElement('zoom-periodo').textContent = `${reserva.fecha_inicio} al ${reserva.fecha_fin}`;
+    
+    const horariFormateado = `${formatearHoraAMPM(reserva.hora_inicio)} - ${formatearHoraAMPM(reserva.hora_fin)}`;
+    getElement('zoom-horario').textContent = horariFormateado;
+    
+    const fechaFormateada = `${formatearFecha(reserva.fecha_inicio)} al ${formatearFecha(reserva.fecha_fin)}`;
+    getElement('zoom-periodo').textContent = fechaFormateada;
+    
     getElement('zoom-unidad').textContent = reserva.nombre_unidad;
 
     bsModalDetalle.show();
